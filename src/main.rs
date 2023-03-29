@@ -1,26 +1,40 @@
-use anyhow::Result;
+use opencv::core::{Size, Scalar, Point, Mat};
+use opencv::highgui::{imshow, named_window, wait_key};
+use opencv::imgproc::ellipse;
+use opencv::objdetect::{CascadeClassifier};
+use opencv::prelude::{CascadeClassifierTrait, MatTraitConst};
+use opencv::videoio::VideoCaptureTrait;
+use opencv::types::VectorOfRect;
 
-use opencv::{
-    prelude::*,
-    videoio,
-    highgui,
-};
-
-fn main() -> Result<()> { // Note, this is anyhow::Result
-    // Open a GUI window
-    highgui::named_window("window", highgui::WINDOW_FULLSCREEN)?;
-    // Open the web-camera (assuming you have one)
-    let mut cam = videoio::VideoCapture::new(0, videoio::CAP_ANY)?;
-    let mut frame = Mat::default(); // This array will store the web-cam data
-    // Read the camera
-    // and display in the window
+fn main() {
+    let mut face_cascade = CascadeClassifier::new("/opt/homebrew/Cellar/opencv/4.7.0_2/share/opencv4/haarcascades/haarcascade_fullbody.xml").unwrap();
+    let mut camera = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
+    let mut frame = Mat::default();
+    let window = "Capture - Face detection";
+    named_window(window, opencv::highgui::WINDOW_NORMAL).unwrap();
     loop {
-        cam.read(&mut frame)?;
-        highgui::imshow("window", &frame)?;
-        let key = highgui::wait_key(1)?;
-        if key == 113 { // quit with q
+        camera.read(&mut frame).unwrap();
+        if frame.empty() {
+            break;
+        }
+        detect_and_display(&mut frame, &mut face_cascade);
+        imshow(window, &mut frame).unwrap();
+        if wait_key(10).unwrap() == 27 {
             break;
         }
     }
-    Ok(())
+}
+
+fn detect_and_display(frame: &mut Mat, face_cascade: &mut CascadeClassifier) {
+    let mut frame_gray = Mat::default();
+    opencv::imgproc::cvt_color(frame, &mut frame_gray, opencv::imgproc::COLOR_BGR2GRAY, 0).unwrap();
+    let mut frame_gray_eq = Mat::default();
+    opencv::imgproc::equalize_hist(&frame_gray, &mut frame_gray_eq).unwrap();
+    let mut faces = VectorOfRect::new();
+    face_cascade.detect_multi_scale(&frame_gray_eq, &mut faces, 1.1, 3, 0, Size::new(30, 30), Size::new(0, 0)).unwrap();
+    for face in faces.iter() {
+        let center = Point::new(face.x + face.width / 2, face.y + face.height / 2);
+        let axes = Size::new(face.width / 2, face.height / 2);
+        ellipse(frame, center, axes, 0.0, 0.0, 360.0, Scalar::new(255.0, 0.0, 255.0, 0.0), 4, opencv::imgproc::LINE_8, 0).unwrap();
+    }
 }
