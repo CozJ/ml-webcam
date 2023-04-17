@@ -5,6 +5,7 @@ use opencv::objdetect::{CascadeClassifier};
 use opencv::prelude::*;
 use opencv::videoio::VideoCaptureTrait;
 use opencv::types::VectorOfRect;
+use rppal::gpio;
 
 fn main() {
     let window = "Capture - Face detection";

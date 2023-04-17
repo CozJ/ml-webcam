@@ -114,6 +114,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "opencv",
+ "rppal",
 ]
 
 [[package]]
@@ -194,6 +195,15 @@ name = "regex-syntax"
 version = "0.6.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
+
+[[package]]
+name = "rppal"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "612e1a22e21f08a246657c6433fe52b773ae43d07c9ef88ccfc433cc8683caba"
+dependencies = [
+ "libc",
+]
 
 [[package]]
 name = "semver"
