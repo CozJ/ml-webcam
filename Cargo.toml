@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.70"
 opencv = "0.78.0"
+rpi_embedded = "0.1.0"
 rppal = "0.14.1"

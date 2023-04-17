@@ -1,13 +1,19 @@
-use opencv::core::{Size, Scalar, Point, Mat, find_file};
+use opencv::core::{Size, Scalar, Point, Mat, find_file, rotate, ROTATE_180};
 use opencv::highgui::{imshow, named_window, wait_key};
 use opencv::imgproc::ellipse;
 use opencv::objdetect::{CascadeClassifier};
 use opencv::prelude::*;
 use opencv::videoio::VideoCaptureTrait;
 use opencv::types::VectorOfRect;
-use rppal::gpio;
+use rpi_embedded::servo::*;
+
 
 fn main() {
+    let mut servo = Servo::new(0);
+    servo.set_min_max(500, 2500);
+
+    servo.write(90);
+
     let window = "Capture - Face detection";
     let xml = find_file("haarcascades/haarcascade_frontalface_alt.xml", true, false).unwrap();
     let mut face_cascade = CascadeClassifier::new(&xml).unwrap();
@@ -16,11 +22,13 @@ fn main() {
     named_window(window, opencv::highgui::WINDOW_NORMAL).unwrap();
     loop {
         camera.read(&mut frame).unwrap();
+        let mut rotated = Mat::default();
+        rotate(&mut frame, &mut rotated, ROTATE_180).unwrap();
         if frame.empty() {
             break;
         }
-        detect_and_display(&mut frame, &mut face_cascade);
-        imshow(window, &mut frame).unwrap();
+        detect_and_display(&mut rotated, &mut face_cascade);
+        imshow(window, &mut rotated).unwrap();
         if wait_key(10).unwrap() == 27 {
             break;
         }
