@@ -1,16 +1,17 @@
-use opencv::core::{Size, Scalar, Point, Mat};
+use opencv::core::{Size, Scalar, Point, Mat, find_file};
 use opencv::highgui::{imshow, named_window, wait_key};
 use opencv::imgproc::ellipse;
 use opencv::objdetect::{CascadeClassifier};
-use opencv::prelude::{CascadeClassifierTrait, MatTraitConst};
+use opencv::prelude::*;
 use opencv::videoio::VideoCaptureTrait;
 use opencv::types::VectorOfRect;
 
 fn main() {
-    let mut face_cascade = CascadeClassifier::new("/opt/homebrew/Cellar/opencv/4.7.0_2/share/opencv4/haarcascades/haarcascade_fullbody.xml").unwrap();
+    let window = "Capture - Face detection";
+    let xml = find_file("haarcascades/haarcascade_frontalface_alt.xml", true, false).unwrap();
+    let mut face_cascade = CascadeClassifier::new(&xml).unwrap();
     let mut camera = opencv::videoio::VideoCapture::new(0, opencv::videoio::CAP_ANY).unwrap();
     let mut frame = Mat::default();
-    let window = "Capture - Face detection";
     named_window(window, opencv::highgui::WINDOW_NORMAL).unwrap();
     loop {
         camera.read(&mut frame).unwrap();
