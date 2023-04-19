@@ -81,12 +81,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lazy_static"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
-
-[[package]]
 name = "libc"
 version = "0.2.140"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -120,7 +114,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "opencv",
- "rpi_embedded",
  "rppal",
 ]
 
@@ -202,16 +195,6 @@ name = "regex-syntax"
 version = "0.6.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
-
-[[package]]
-name = "rpi_embedded"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f052bc47577b54d656c0adabd2e76591bc646ab01714e1abf429aeaed83f1222"
-dependencies = [
- "lazy_static",
- "libc",
-]
 
 [[package]]
 name = "rppal"
