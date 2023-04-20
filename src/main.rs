@@ -1,8 +1,6 @@
 use std::io::Write;
 use std::time::Duration;
 
-use std::thread;
-
 use opencv::core::{find_file, rotate, Mat, Point, Scalar, Size, ROTATE_180};
 use opencv::highgui::{imshow, named_window, wait_key};
 use opencv::imgproc::{ellipse, put_text, FONT_HERSHEY_PLAIN};
@@ -13,12 +11,12 @@ use opencv::videoio::VideoCaptureTrait;
 use serial::prelude::*;
 use serial::unix::TTYPort;
 
-struct mode {
+struct Mode {
     maunal: bool,
 }
 
 fn main() {
-    let mut mode = mode { maunal: false };
+    let mut mode = Mode { maunal: false };
 
     let mut port = serial::open("/dev/ttyACM0").unwrap();
     port.reconfigure(&|settings| {
@@ -131,7 +129,7 @@ fn pick_command(x: i32, y: i32) -> String {
     return command;
 }
 
-fn input_handler(input: i32, port: &mut TTYPort, mode: &mut mode) {
+fn input_handler(input: i32, port: &mut TTYPort, mode: &mut Mode) {
     if input == -1 {
         return;
     }
