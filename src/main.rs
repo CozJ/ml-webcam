@@ -5,15 +5,9 @@ use opencv::objdetect::{CascadeClassifier};
 use opencv::prelude::*;
 use opencv::videoio::VideoCaptureTrait;
 use opencv::types::VectorOfRect;
-use rppal::gpio::Gpio;
 
 
 fn main() {
-
-    let gpio = Gpio::new().unwrap();
-    let mut pin = gpio.get(12).unwrap().into_output();
-
-    pin.set_high();
 
     let window = "Capture - Face detection";
     let xml = find_file("haarcascades/haarcascade_frontalface_alt.xml", true, false).unwrap();
