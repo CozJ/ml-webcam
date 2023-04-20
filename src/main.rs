@@ -1,5 +1,7 @@
-use std::io::{Read, Write};
+use std::io::Write;
 use std::time::Duration;
+
+use std::thread;
 
 use opencv::core::{find_file, rotate, Mat, Point, Scalar, Size, ROTATE_180};
 use opencv::highgui::{imshow, named_window, wait_key};
@@ -34,41 +36,75 @@ fn main() {
         camera.read(&mut frame).unwrap();
         let mut rotated = Mat::default();
         rotate(&mut frame, &mut rotated, ROTATE_180).unwrap();
+
+        let height = frame.rows();
+        let width = frame.cols();
+
+        println!("height: {} width: {}", height, width);
+
         if frame.empty() {
             break;
         }
-        detect_and_display(&mut rotated, &mut face_cascade);
-        imshow(window, &mut rotated).unwrap();
+        let location = detect_and_display(&mut frame, &mut face_cascade);
+
+        println!("location x:{} y:{}", location.x, location.y);
+        // left boundary = 200
+        // right boundary = 1000
+        // top boundary = 180
+        // bottom boundary = 540
+
+        if location.x < 200 {
+            commands("left", &mut port);
+        }
+        if location.x > 1000 {
+            commands("right", &mut port);
+        }
+        if location.y < 180 {
+            commands("up", &mut port);
+        }
+        if location.y > 540 {
+            commands("down", &mut port);
+        }
+        if location.x > 200 && location.x < 1000 && location.y > 180 && location.y < 540 {
+            commands("await", &mut port);
+        }
+
+        imshow(window, &mut frame).unwrap();
         if wait_key(10).unwrap() == 27 {
             break;
         }
     }
 }
 
-fn commands(command: String, port: &mut TTYPort) {
+fn commands(command: &str, port: &mut TTYPort) {
     if command == "left" {
         let data_to_send = "left\n".as_bytes();
         port.write_all(data_to_send).unwrap();
-        println!("Sent: {:?}", data_to_send);
+        //println!("Sent: {:?}", data_to_send);
     }
     if command == "right" {
         let data_to_send = "right\n".as_bytes();
         port.write_all(data_to_send).unwrap();
-        println!("Sent: {:?}", data_to_send);
+        //println!("Sent: {:?}", data_to_send);
     }
     if command == "up" {
         let data_to_send = "up\n".as_bytes();
         port.write_all(data_to_send).unwrap();
-        println!("Sent: {:?}", data_to_send);
+        //println!("Sent: {:?}", data_to_send);
     }
     if command == "down" {
         let data_to_send = "down\n".as_bytes();
         port.write_all(data_to_send).unwrap();
-        println!("Sent: {:?}", data_to_send);
+        //println!("Sent: {:?}", data_to_send);
+    }
+    if command == "await" {
+        let data_to_send = "await\n".as_bytes();
+        port.write_all(data_to_send).unwrap();
+        //println!("Sent: {:?}", data_to_send);
     }
 }
 
-fn detect_and_display(frame: &mut Mat, face_cascade: &mut CascadeClassifier) {
+fn detect_and_display(frame: &mut Mat, face_cascade: &mut CascadeClassifier) -> Point {
     let mut frame_gray = Mat::default();
     opencv::imgproc::cvt_color(frame, &mut frame_gray, opencv::imgproc::COLOR_BGR2GRAY, 0).unwrap();
     let mut frame_gray_eq = Mat::default();
@@ -102,4 +138,18 @@ fn detect_and_display(frame: &mut Mat, face_cascade: &mut CascadeClassifier) {
         )
         .unwrap();
     }
+    let largestFace = getLocationOflargestFace(faces);
+    return largestFace;
+}
+
+fn getLocationOflargestFace(faces: VectorOfRect) -> Point {
+    let mut largestFace = Point::new(0, 0);
+    let mut largestFaceSize = 0;
+    for face in faces.iter() {
+        if face.width * face.height > largestFaceSize {
+            largestFace = Point::new(face.x + face.width / 2, face.y + face.height / 2);
+            largestFaceSize = face.width * face.height;
+        }
+    }
+    return largestFace;
 }
