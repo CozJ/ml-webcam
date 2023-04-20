@@ -18,11 +18,8 @@ struct mode {
 }
 
 fn main() {
-    
-    let mut mode = mode {
-        maunal: false,
-    };
-    
+    let mut mode = mode { maunal: false };
+
     let mut port = serial::open("/dev/ttyACM0").unwrap();
     port.reconfigure(&|settings| {
         settings.set_baud_rate(serial::Baud9600)?;
@@ -49,11 +46,51 @@ fn main() {
         if frame.empty() {
             break;
         }
-        let location = detect_and_display(&mut rotated, &mut face_cascade);
+        put_text(
+            &mut rotated,
+            "Press ESC to exit",
+            Point::new(10, 30),
+            FONT_HERSHEY_PLAIN,
+            2.0,
+            Scalar::new(0.0, 255.0, 0.0, 0.0),
+            2,
+            8,
+            false,
+        )
+        .unwrap();
 
-        put_text(rotated, "Press ESC to exit", Point::new(10, 30), FONT_HERSHEY_PLAIN, 1.0, Scalar::new(0.0, 0.0, 255.0, 0.0), 2, 8, false).unwrap();
+        if mode.maunal == false {
+            put_text(
+                &mut rotated,
+                "AUTO",
+                Point::new(10, 55),
+                FONT_HERSHEY_PLAIN,
+                2.0,
+                Scalar::new(0.0, 255.0, 0.0, 0.0),
+                2,
+                8,
+                false,
+            )
+            .unwrap();
+        } else if mode.maunal == true {
+            put_text(
+                &mut rotated,
+                "MANUAL",
+                Point::new(10, 55),
+                FONT_HERSHEY_PLAIN,
+                2.0,
+                Scalar::new(0.0, 255.0, 0.0, 0.0),
+                2,
+                8,
+                false,
+            )
+            .unwrap();
+        }
 
-        execute_commands(&pick_command(location.x, location.y), &mut port);
+        if mode.maunal == false {
+            let location = detect_and_display(&mut rotated, &mut face_cascade);
+            execute_commands(&pick_command(location.x, location.y), &mut port);
+        }
 
         imshow(window, &mut rotated).unwrap();
         // arrow key binding to move camera manually
@@ -61,7 +98,7 @@ fn main() {
         if input == 27 {
             break;
         }
-        input_handler(input, &mut port);
+        input_handler(input, &mut port, &mut mode);
     }
 }
 
@@ -94,18 +131,28 @@ fn pick_command(x: i32, y: i32) -> String {
     return command;
 }
 
-fn input_handler(input: i32, port: &mut TTYPort) {
-    if input == 83 {
+fn input_handler(input: i32, port: &mut TTYPort, mode: &mut mode) {
+    if input == -1 {
+        return;
+    }
+    if input == 83 || input == 2 {
         execute_commands("right", port)
     }
-    if input == 81 {
+    if input == 81 || input == 3 {
         execute_commands("left", port)
     }
-    if input == 82 {
+    if input == 82 || input == 0 {
         execute_commands("up", port)
     }
-    if input == 84 {
+    if input == 84 || input == 1 {
         execute_commands("down", port)
+    }
+    if input == 9 {
+        if mode.maunal == false {
+            mode.maunal = true;
+        } else if mode.maunal == true {
+            mode.maunal = false;
+        }
     }
 }
 
