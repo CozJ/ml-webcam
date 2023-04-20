@@ -62,7 +62,9 @@ fn pick_command(x: i32, y: i32) -> String {
 
     let mut command = String::new();
 
-    if x > 500 && x < 700 && y > 300 && y < 400 {
+    if x == 0 && y == 0 {
+        command = "await".to_string();
+    } else if x > 500 && x < 700 && y > 300 && y < 400 {
         command = "await".to_string();
     } else {
         if x < 500 {
