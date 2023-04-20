@@ -14,7 +14,7 @@ use serial::prelude::*;
 use serial::unix::TTYPort;
 
 fn main() {
-    let mut port = serial::open("/dev/tty.usbmodem11301").unwrap();
+    let mut port = serial::open("/dev/ttyACM0").unwrap();
     port.reconfigure(&|settings| {
         settings.set_baud_rate(serial::Baud9600)?;
         settings.set_char_size(serial::Bits8);
@@ -37,46 +37,66 @@ fn main() {
         let mut rotated = Mat::default();
         rotate(&mut frame, &mut rotated, ROTATE_180).unwrap();
 
-        let height = frame.rows();
-        let width = frame.cols();
-
-        println!("height: {} width: {}", height, width);
-
         if frame.empty() {
             break;
         }
-        let location = detect_and_display(&mut frame, &mut face_cascade);
+        let location = detect_and_display(&mut rotated, &mut face_cascade);
 
-        println!("location x:{} y:{}", location.x, location.y);
-        // left boundary = 200
-        // right boundary = 1000
-        // top boundary = 180
-        // bottom boundary = 540
+        execute_commands(&pick_command(location.x, location.y), &mut port);
 
-        if location.x < 200 {
-            commands("left", &mut port);
-        }
-        if location.x > 1000 {
-            commands("right", &mut port);
-        }
-        if location.y < 180 {
-            commands("up", &mut port);
-        }
-        if location.y > 540 {
-            commands("down", &mut port);
-        }
-        if location.x > 200 && location.x < 1000 && location.y > 180 && location.y < 540 {
-            commands("await", &mut port);
-        }
-
-        imshow(window, &mut frame).unwrap();
-        if wait_key(10).unwrap() == 27 {
+        imshow(window, &mut rotated).unwrap();
+        // arrow key binding to move camera manually
+        let input = wait_key(10).unwrap();
+        if input == 27 {
             break;
         }
+        input_handler(input, &mut port);
     }
 }
 
-fn commands(command: &str, port: &mut TTYPort) {
+fn pick_command(x: i32, y: i32) -> String {
+    // left boundary = 200
+    // right boundary = 1000
+    // top boundary = 180
+    // bottom boundary = 540
+
+    let mut command = String::new();
+
+    if x > 500 && x < 700 && y > 300 && y < 400 {
+        command = "await".to_string();
+    } else {
+        if x < 500 {
+            command = "left".to_string();
+        }
+        if x > 700 {
+            command = "right".to_string();
+        }
+        if y < 300 {
+            command = "up".to_string();
+        }
+        if y > 400 {
+            command = "down".to_string();
+        }
+    }
+    return command;
+}
+
+fn input_handler(input: i32, port: &mut TTYPort) {
+    if input == 83 {
+        execute_commands("right", port)
+    }
+    if input == 81 {
+        execute_commands("left", port)
+    }
+    if input == 82 {
+        execute_commands("up", port)
+    }
+    if input == 84 {
+        execute_commands("down", port)
+    }
+}
+
+fn execute_commands(command: &str, port: &mut TTYPort) {
     if command == "left" {
         let data_to_send = "left\n".as_bytes();
         port.write_all(data_to_send).unwrap();
@@ -138,18 +158,18 @@ fn detect_and_display(frame: &mut Mat, face_cascade: &mut CascadeClassifier) -> 
         )
         .unwrap();
     }
-    let largestFace = getLocationOflargestFace(faces);
-    return largestFace;
+    let largest_face = get_location_of_largest_face(faces);
+    return largest_face;
 }
 
-fn getLocationOflargestFace(faces: VectorOfRect) -> Point {
-    let mut largestFace = Point::new(0, 0);
-    let mut largestFaceSize = 0;
+fn get_location_of_largest_face(faces: VectorOfRect) -> Point {
+    let mut largest_face = Point::new(0, 0);
+    let mut largest_face_size = 0;
     for face in faces.iter() {
-        if face.width * face.height > largestFaceSize {
-            largestFace = Point::new(face.x + face.width / 2, face.y + face.height / 2);
-            largestFaceSize = face.width * face.height;
+        if face.width * face.height > largest_face_size {
+            largest_face = Point::new(face.x + face.width / 2, face.y + face.height / 2);
+            largest_face_size = face.width * face.height;
         }
     }
-    return largestFace;
+    return largest_face;
 }
