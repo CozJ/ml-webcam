@@ -1,3 +1,6 @@
+use std::io::Write;
+use std::time::Duration;
+
 use opencv::core::{Size, Scalar, Point, Mat, find_file, rotate, ROTATE_180};
 use opencv::highgui::{imshow, named_window, wait_key};
 use opencv::imgproc::ellipse;
@@ -5,9 +8,17 @@ use opencv::objdetect::{CascadeClassifier};
 use opencv::prelude::*;
 use opencv::videoio::VideoCaptureTrait;
 use opencv::types::VectorOfRect;
-
+use serial::prelude::*;
 
 fn main() {
+
+    let mut port = serial::open("/dev/ttyACM0").unwrap();
+    port.reconfigure(&|settings| {
+        settings.set_baud_rate(serial::Baud9600)?;
+        Ok(())
+    }).unwrap();
+    port.set_timeout(Duration::from_millis(1000)).unwrap();
+
 
     let window = "Capture - Face detection";
     let xml = find_file("haarcascades/haarcascade_frontalface_alt.xml", true, false).unwrap();
@@ -27,6 +38,9 @@ fn main() {
         if wait_key(10).unwrap() == 27 {
             break;
         }
+        let data_to_send = "left/n".as_bytes();
+        port.write_all(data_to_send).unwrap();
+        println!("Sent: {:?}", data_to_send);
     }
 }
 
