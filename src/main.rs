@@ -5,7 +5,7 @@ use std::thread;
 
 use opencv::core::{find_file, rotate, Mat, Point, Scalar, Size, ROTATE_180};
 use opencv::highgui::{imshow, named_window, wait_key};
-use opencv::imgproc::ellipse;
+use opencv::imgproc::{ellipse, put_text, FONT_HERSHEY_PLAIN};
 use opencv::objdetect::CascadeClassifier;
 use opencv::prelude::*;
 use opencv::types::VectorOfRect;
@@ -13,7 +13,16 @@ use opencv::videoio::VideoCaptureTrait;
 use serial::prelude::*;
 use serial::unix::TTYPort;
 
+struct mode {
+    maunal: bool,
+}
+
 fn main() {
+    
+    let mut mode = mode {
+        maunal: false,
+    };
+    
     let mut port = serial::open("/dev/ttyACM0").unwrap();
     port.reconfigure(&|settings| {
         settings.set_baud_rate(serial::Baud9600)?;
@@ -41,6 +50,8 @@ fn main() {
             break;
         }
         let location = detect_and_display(&mut rotated, &mut face_cascade);
+
+        put_text(rotated, "Press ESC to exit", Point::new(10, 30), FONT_HERSHEY_PLAIN, 1.0, Scalar::new(0.0, 0.0, 255.0, 0.0), 2, 8, false).unwrap();
 
         execute_commands(&pick_command(location.x, location.y), &mut port);
 
